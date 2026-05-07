@@ -1,0 +1,28 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
+{
+	"name": "Geospatial",
+	"image": "rocker/geospatial:4.5.3",
+	"features": {},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [
+		8000
+	],
+	"containerEnv": {
+		"QUARTO_LOG_LEVEL": "debug",
+		"DEBIAN_FRONTEND": "noninteractive"
+	},
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "quarto check",
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ritwickdey.LiveServer"
+			]
+		}
+	},
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	"remoteUser": "root"
+}
