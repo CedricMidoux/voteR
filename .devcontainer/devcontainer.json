@@ -13,13 +13,16 @@
 		"DEBIAN_FRONTEND": "noninteractive"
 	},
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "quarto check",
+	"postCreateCommand": "quarto check && install2.r languageserver httpgd",
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
-				"ritwickdey.LiveServer"
+				"ritwickdey.LiveServer",
+				"reditorsupport.r",
+				"Posit.air-vscode",
+				"quarto.quarto"
 			]
 		}
 	},

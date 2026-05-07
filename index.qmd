@@ -1,7 +1,13 @@
 ---
-title: "Data 92-13"
+title: "Analyses des résultats électoraux de la circonscription 92-13"
+author:
+  - name: Cédric Midoux
+    orcid: 0000-0002-7964-0929
+    affiliations:
+      - name: BLR
+        country: FRANCE
+date: last-modified
+date-format: iso
+license: CC BY-SA
 ---
 
-This is a Quarto website.
-
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.

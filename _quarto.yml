@@ -1,13 +1,18 @@
 project:
   type: website
+  output-dir: public
 
 website:
   title: "Data 92-13"
   navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+  #   left:
+  #     - href: index.qmd
+  #       text: Home
+  #     - about.qmd
+      right:
+      - icon: github
+        href: https://github.com/CedricMidoux/voteR
+
 
 format:
   html:
@@ -16,6 +21,3 @@ format:
       - brand
     css: styles.css
     toc: true
-
-
-
