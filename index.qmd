@@ -17,7 +17,6 @@ license: CC BY-SA
 #| label: data
 library(tidyverse)
 
-
 palette_nuances <- c(
     "LEXD" = "black",
     "LDVD" = "royalblue2",
@@ -45,7 +44,35 @@ sig9213 <- sf::st_read(url_sig) |>
 df <- arrow::read_parquet(
     "https://opendata.hauts-de-seine.fr/api/explore/v2.1/catalog/datasets/resultats-des-elections-par-bureau-de-vote/exports/parquet?lang=fr&timezone=Europe%2FBerlin",
     col_select = c(
-        "election", "type", "annee", "tour", "code_circonscription", "circonscription", "commune", "code_insee", "code_bureau_vote", "inscrits", "abstentions", "votants", "blancs_et_nuls", "blancs", "nuls", "exprimes", "num_panneau", "candidat_ou_liste", "sexe", "nom", "prenom", "voix", "code_canton", "canton", "code_nuance", "candidat_ou_liste_nuance", "nom_source", "prenom_source", "code_sigle"
+        "election",
+        "type",
+        "annee",
+        "tour",
+        "code_circonscription",
+        "circonscription",
+        "commune",
+        "code_insee",
+        "code_bureau_vote",
+        "inscrits",
+        "abstentions",
+        "votants",
+        "blancs_et_nuls",
+        "blancs",
+        "nuls",
+        "exprimes",
+        "num_panneau",
+        "candidat_ou_liste",
+        "sexe",
+        "nom",
+        "prenom",
+        "voix",
+        "code_canton",
+        "canton",
+        "code_nuance",
+        "candidat_ou_liste_nuance",
+        "nom_source",
+        "prenom_source",
+        "code_sigle"
     )
 ) |>
     mutate(
@@ -54,6 +81,7 @@ df <- arrow::read_parquet(
                 election,
                 type,
                 commune,
+                code_insee,
                 code_bureau_vote,
                 candidat_ou_liste,
                 code_nuance
@@ -72,7 +100,16 @@ df_2026 <- df |>
                 "Latin-ASCII"
             ))
     ) |>
-    select(commune, code_bureau_vote, inscrits, exprimes, voix, nom, code_nuance) |>
+    select(
+        commune,
+        code_insee,
+        code_bureau_vote,
+        inscrits,
+        exprimes,
+        voix,
+        nom,
+        code_nuance
+    ) |>
     mutate(
         code_nuance = factor(
             code_nuance,
@@ -105,11 +142,77 @@ p <- df_2026 |>
 
 p +
     geom_col(color = "grey30") +
-    geom_text(aes(label = nom), position = position_stack(vjust = 0.5), angle = 90, check_overlap = TRUE, color = "white", size = 3) +
-    labs(title = "Voix par nuance", subtitle = "Municipales 2026 • 1er tour • Communes 92-13")
+    geom_text(
+        aes(label = nom),
+        position = position_stack(vjust = 0.5),
+        angle = 90,
+        check_overlap = TRUE,
+        color = "white",
+        size = 3
+    ) +
+    labs(
+        title = "Voix par nuance",
+        subtitle = "Municipales 2026 • 1er tour • Communes 92-13"
+    )
 
-p + geom_col(position = "fill", color = "grey30") +
-    geom_text(aes(label = nom), position = position_fill(vjust = 0.5), angle = 90, check_overlap = TRUE, color = "white", size = 3) +
+p +
+    geom_col(position = "fill", color = "grey30") +
+    geom_text(
+        aes(label = nom),
+        position = position_fill(vjust = 0.5),
+        angle = 90,
+        check_overlap = TRUE,
+        color = "white",
+        size = 3
+    ) +
     scale_y_continuous(labels = scales::label_percent()) +
-    labs(title = "Répartition des nuances", subtitle = "Municipales 2026 • 1er tour • Communes 92-13")
+    labs(
+        title = "Répartition des nuances",
+        subtitle = "Municipales 2026 • 1er tour • Communes 92-13"
+    )
+```
+
+## Carte
+
+
+```{r}
+#| label: map
+library(leaflet)
+
+sf_2026G <- df_2026 |>
+    filter(nom %in% c("MAUGER", "GAILLARD", "WIETZERBIN", "BONAZZI")) |>
+    mutate(
+        score = voix / exprimes,
+        codeBureauVote = glue::glue(
+            "{code_insee}_{str_pad(code_bureau_vote, 4, pad = '0')}"
+        )
+    ) |>
+    left_join(
+        sig9213 |> select(codeBureauVote, geometry),
+        by = "codeBureauVote"
+    ) |>
+    sf::st_as_sf()
+
+pal <- colorNumeric(
+    palette = "Reds",
+    domain = sf_2026G$score,
+    na.color = "transparent"
+)
+
+leaflet(sf_2026G) |>
+    addProviderTiles(providers$CartoDB.Positron) |>
+    addPolygons(
+        fillColor = ~ pal(score),
+        fillOpacity = 0.7,
+        weight = 0.3,
+        color = "white",
+        opacity = 0.8,
+        popup = ~ glue::glue(
+            "<b>{commune}</b><br>{nom} : {scales::percent(score, accuracy = 0.01, decimal.mark = ',')}"
+        )
+    ) |>
+    addControl(
+        html = "Score des candidates soutenus par le PS<br>Municipales 2026 • 1er tour • Communes 92-13",
+        position = "bottomleft"
+    )
 ```
