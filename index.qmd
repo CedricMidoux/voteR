@@ -11,3 +11,99 @@ date-format: iso
 license: CC BY-SA
 ---
 
+## Import data
+
+```{r}
+#| label: sig
+library(tidyverse)
+
+
+palette_nuances <- c(
+    "LEXD" = "black",
+    "LDVD" = "royalblue2",
+    "LUD" = "royalblue4",
+    "LUDI" = "deepskyblue3",
+    "LDVC" = "steelblue",
+    "LDIV" = "goldenrod2",
+    "LDVG" = "orchid",
+    "LUG" = "deeppink3",
+    "LFI" = "firebrick2"
+)
+
+communes9213 <- c(
+    "Antony",
+    "Bourg-la-Reine",
+    "Châtenay-Malabry",
+    "Sceaux"
+)
+
+url_sig <- "https://www.data.gouv.fr/api/1/datasets/r/f98165a7-7c37-4705-a181-bcfc943edc73"
+
+sig9213 <- sf::st_read(url_sig) |>
+    filter(codeDepartement == "92", nomCommune %in% communes9213)
+
+df <- arrow::read_parquet(
+    "https://opendata.hauts-de-seine.fr/api/explore/v2.1/catalog/datasets/resultats-des-elections-par-bureau-de-vote/exports/parquet?lang=fr&timezone=Europe%2FBerlin",
+    col_select = c(
+        "election", "type", "annee", "tour", "code_circonscription", "circonscription", "commune", "code_insee", "code_bureau_vote", "inscrits", "abstentions", "votants", "blancs_et_nuls", "blancs", "nuls", "exprimes", "num_panneau", "candidat_ou_liste", "sexe", "nom", "prenom", "voix", "code_canton", "canton", "code_nuance", "candidat_ou_liste_nuance", "nom_source", "prenom_source", "code_sigle"
+    )
+) |>
+    mutate(
+        across(
+            c(
+                election,
+                type,
+                commune,
+                code_bureau_vote,
+                candidat_ou_liste,
+                code_nuance
+            ),
+            as_factor
+        ),
+        annee = as_factor(year(annee))
+    ) |>
+    filter(
+        election == "Municipales 2026 - 1er tour",
+        commune %in%
+            str_to_upper(stringi::stri_trans_general(
+                communes9213,
+                "Latin-ASCII"
+            ))
+    ) |>
+    select(commune, code_bureau_vote, inscrits, exprimes, voix, nom, code_nuance) |>
+    mutate(
+        code_nuance = factor(
+            code_nuance,
+            levels = names(palette_nuances)
+        ),
+    )
+
+df |>
+    select(commune, nom, code_nuance) |>
+    distinct() |>
+    knitr::kable()
+```
+
+## Histogramme
+
+```{r}
+#| label: histo
+df |>
+    summarise(voix = sum(voix), .by = c(commune, nom, code_nuance)) |>
+    ggplot(aes(x = commune, y = voix, fill = code_nuance)) +
+    geom_col(position = "stack", color = "grey") +
+    coord_flip() +
+    theme_minimal() +
+    scale_fill_manual(values = palette_nuances) +
+    ggtitle("Voix par nuance", "Municipales 2026 - 1er tour - Communes 92-13")
+
+df |>
+    summarise(voix = sum(voix), .by = c(commune, nom, code_nuance)) |>
+    ggplot(aes(x = commune, y = voix, fill = code_nuance)) +
+    geom_col(position = "fill", color = "grey") +
+    coord_flip() +
+    theme_minimal() +
+    scale_fill_manual(values = palette_nuances) +
+    scale_y_continuous(labels = scales::label_percent()) +
+    ggtitle("Pourcentage par nuance", "Municipales 2026 - 1er tour - Communes 92-13")
+```
