@@ -61,7 +61,9 @@ df <- arrow::read_parquet(
             as_factor
         ),
         annee = as_factor(year(annee))
-    ) |>
+    )
+
+df_2026 <- df |>
     filter(
         election == "Municipales 2026 - 1er tour",
         commune %in%
@@ -78,7 +80,7 @@ df <- arrow::read_parquet(
         ),
     )
 
-df |>
+df_2026 |>
     select(commune, nom, code_nuance) |>
     distinct() |>
     knitr::kable()
@@ -88,22 +90,23 @@ df |>
 
 ```{r}
 #| label: histo
-df |>
-    summarise(voix = sum(voix), .by = c(commune, nom, code_nuance)) |>
-    ggplot(aes(x = commune, y = voix, fill = code_nuance)) +
-    geom_col(position = "stack", color = "grey") +
+p <- df_2026 |>
+    summarise(
+        voix = sum(voix, na.rm = TRUE),
+        inscrits = sum(exprimes, na.rm = TRUE),
+        exprimes = sum(exprimes, na.rm = TRUE),
+        .by = c(commune, nom, code_nuance)
+    ) |>
+    ggplot(aes(x = reorder(commune, inscrits), y = voix, fill = code_nuance)) +
     coord_flip() +
     theme_minimal() +
     scale_fill_manual(values = palette_nuances) +
-    ggtitle("Voix par nuance", "Municipales 2026 - 1er tour - Communes 92-13")
+    labs(x = NULL, y = NULL, fill = "Nuance")
 
-df |>
-    summarise(voix = sum(voix), .by = c(commune, nom, code_nuance)) |>
-    ggplot(aes(x = commune, y = voix, fill = code_nuance)) +
-    geom_col(position = "fill", color = "grey") +
-    coord_flip() +
-    theme_minimal() +
-    scale_fill_manual(values = palette_nuances) +
+p + geom_col(color = "grey30") +
+    labs(title = "Voix par nuance", subtitle = "Municipales 2026 • 1er tour • Communes 92-13")
+
+p + geom_col(position = "fill", color = "grey30") +
     scale_y_continuous(labels = scales::label_percent()) +
-    ggtitle("Pourcentage par nuance", "Municipales 2026 - 1er tour - Communes 92-13")
+    labs(title = "Répartition des nuances", subtitle = "Municipales 2026 • 1er tour • Communes 92-13")
 ```
