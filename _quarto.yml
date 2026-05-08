@@ -16,6 +16,8 @@ website:
 
 format:
   html:
+    code-fold: true
+    code-tools: true
     theme:
       - cosmo
       - brand

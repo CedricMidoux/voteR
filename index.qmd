@@ -14,7 +14,7 @@ license: CC BY-SA
 ## Import data
 
 ```{r}
-#| label: sig
+#| label: data
 library(tidyverse)
 
 
@@ -93,7 +93,7 @@ df_2026 |>
 p <- df_2026 |>
     summarise(
         voix = sum(voix, na.rm = TRUE),
-        inscrits = sum(exprimes, na.rm = TRUE),
+        inscrits = sum(inscrits, na.rm = TRUE),
         exprimes = sum(exprimes, na.rm = TRUE),
         .by = c(commune, nom, code_nuance)
     ) |>
@@ -103,10 +103,13 @@ p <- df_2026 |>
     scale_fill_manual(values = palette_nuances) +
     labs(x = NULL, y = NULL, fill = "Nuance")
 
-p + geom_col(color = "grey30") +
+p +
+    geom_col(color = "grey30") +
+    geom_text(aes(label = nom), position = position_stack(vjust = 0.5), angle = 90, check_overlap = TRUE, color = "white", size = 3) +
     labs(title = "Voix par nuance", subtitle = "Municipales 2026 • 1er tour • Communes 92-13")
 
 p + geom_col(position = "fill", color = "grey30") +
+    geom_text(aes(label = nom), position = position_fill(vjust = 0.5), angle = 90, check_overlap = TRUE, color = "white", size = 3) +
     scale_y_continuous(labels = scales::label_percent()) +
     labs(title = "Répartition des nuances", subtitle = "Municipales 2026 • 1er tour • Communes 92-13")
 ```
